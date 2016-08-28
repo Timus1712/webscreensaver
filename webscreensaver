@@ -27,6 +27,7 @@ class WebScreensaver(object):
 
 	def setup_window(self):
 		"""Perform some magic (if needed) to set up a Gtk window"""
+
 		win = None
 
 		if self.window_id:
@@ -43,7 +44,7 @@ class WebScreensaver(object):
 			x, y, w, h, _ = self.gdk_win.get_geometry()
 
 			x, y, w, h, _ = self.gdk_win.get_geometry()
-			
+
 			# Make us cover our parent window
 			win.move(0, 0)
 			win.set_default_size(w, h)
@@ -58,6 +59,7 @@ class WebScreensaver(object):
 
 	def setup_browser(self):
 		"""Sets up WebKit in our window"""
+
 		browser = webkit.WebView()
 
 		# Try to enable webgl
@@ -94,12 +96,14 @@ class WebScreensaver(object):
 
 	def setup_layout(self):
 		"""Make sure the browser can expand without affecting the window"""
+
 		sw = gtk.Layout()
 		sw.put(self.browser, 0, 0)
 		self.win.add(sw)
 
 	def setup(self):
 		"""Do all the things!"""
+
 		self.setup_window()
 		self.setup_browser()
 		self.setup_layout()
@@ -116,6 +120,7 @@ class WebScreensaver(object):
 	@classmethod
 	def determine_window_id(cls, win_id=None):
 		"""Try and get an XID to use as our parent window"""
+
 		if not win_id:
 			win_id = os.getenv("XSCREENSAVER_WINDOW")
 
@@ -279,7 +284,7 @@ class WebHacks(object):
 	def determine_screensaver(cls, name=None):
 		for hack in cls.hacks:
 			if hack.name == name:
-				return hack		
+				return hack
 
 		# I'm feeling lucky :-)
 		return random.choice(cls.hacks)
