@@ -175,8 +175,12 @@ class UserScripts(object):
 
 	@classmethod
 	def run_command(cls, command):
-		return command
-
+		script = """
+			(function () {
+				%s;
+			})()
+		"""
+		return script % command
 
 class WebHacks(object):
 	"""
@@ -230,15 +234,31 @@ class WebHacks(object):
 			url="http://threejs.org/examples/webgl_shader.html"),
 		Hack("ibillboards",
 			url="http://threejs.org/examples/webgl_buffergeometry_instancing_billboards.html"),
-		Hack("moleculus", # TODO: autochanger
-			url="http://threejs.org/examples/css3d_molecules.html"),
-		Hack("css3d_sprites", # TODO: black background
-			url="http://threejs.org/examples/css3d_sprites.html"),
+		Hack("molecules", # TODO: select which element showing
+			url="http://threejs.org/examples/css3d_molecules.html",
+			scripts=[UserScripts.run_command("""
+				function pickRandomProperty(obj) {
+					var result;
+				var count = 0;
+				    for (var prop in obj)
+				        if (Math.random() < 1/++count)
+				           result = prop;
+				    return result;
+				};
+				setInterval(function(){
+					loadMolecule('models/molecules/' + MOLECULES[pickRandomProperty(MOLECULES)]);
+				}, 20000); // 20 sec
+			""")]),
+		# Hack("css3d_sprites", # TODO: Not working for some reasons
+		# 	url="http://threejs.org/examples/css3d_sprites.html",
+		# 	scripts=[UserScripts.run_command("document.body.style.backgroundColor = 'black'")]
+		# ),
 		Hack("earth",
 			url="http://threejs.org/examples/misc_controls_fly.html",
 			scripts=[UserScripts.remove_ids("info")]),
-		Hack("birds", # TODO: black background
-			url="http://threejs.org/examples/canvas_geometry_birds.html"),
+		Hack("birds",
+			url="http://threejs.org/examples/canvas_geometry_birds.html",
+			scripts=[UserScripts.run_command("renderer.setClearColor( 0x000000 );")]),
 		Hack("sky_panorama",
 			url="http://threejs.org/examples/canvas_geometry_panorama.html"),
 		Hack("particles_random",
