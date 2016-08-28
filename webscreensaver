@@ -14,22 +14,23 @@ gi.require_version('WebKit', '3.0')
 gi.require_version('Soup', '2.4')
 from gi.repository import Gtk, Gdk, GdkX11, GObject, Soup, WebKit
 
-class WebScreensaver(object):
-	'''
-	A simple wrapper for WebKit which works as an XScreensaver Hack
-	'''
 
-	def __init__(self, url='http://www.google.com', window_id=None, scripts=None, cookie_file=None):
+class WebScreensaver(object):
+	"""
+	A simple wrapper for WebKit which works as an XScreensaver Hack
+	"""
+
+	def __init__(self, url="http://www.google.com", window_id=None, scripts=None):
 		self.window_id = window_id
 		self.scripts = scripts
 		self.url = url
-		self.cookie_file = cookie_file
 
 		self.w = 640
 		self.h = 480
 
 	def setup_window(self):
-		'''Perform some magic (if needed) to set up a Gtk window'''
+		"""Perform some magic (if needed) to set up a Gtk window"""
+
 		if self.window_id:
 			self.win = Gtk.Window(Gtk.WindowType.POPUP)
 
@@ -55,7 +56,8 @@ class WebScreensaver(object):
 
 
 	def setup_browser(self):
-		'''Sets up WebKit in our window'''
+		"""Sets up WebKit in our window"""
+
 		self.browser = WebKit.WebView()
 
 		# Try to enable webgl
@@ -76,7 +78,6 @@ class WebScreensaver(object):
 
 		self.browser.connect('onload-event', self.handle_on_load)
 
-
 	def setup_cookie_jar(self):
 		if (self.cookie_file):
 			cookiejar = Soup.CookieJarText.new(self.cookie_file, False)
@@ -85,10 +86,10 @@ class WebScreensaver(object):
 			session.add_feature(cookiejar)
 
 	def handle_on_load(self, view, frame, user_data=None):
-		'''
+		"""
 		Handler for browser page load events.
 		This will be executed for every frame within the browser.
-		'''
+		"""
 
 		if not self.scripts:
 			return
@@ -98,13 +99,15 @@ class WebScreensaver(object):
 			self.browser.execute_script(script)
 
 	def setup_layout(self):
-		'''Make sure the browser can expand without affecting the window'''
+		"""Make sure the browser can expand without affecting the window"""
+
 		sw = Gtk.Layout()
 		sw.put(self.browser, 0, 0)
 		self.win.add(sw)
 
 	def setup(self):
-		'''Do all the things!'''
+		"""Do all the things!"""
+
 		self.setup_window()
 		self.setup_browser()
 		self.setup_layout()
@@ -113,8 +116,8 @@ class WebScreensaver(object):
 		def terminate(*args):
 			Gtk.main_quit()
 
-		self.win.connect('destroy', terminate)
-		self.win.connect('delete-event', terminate)
+		self.win.connect("destroy", terminate)
+		self.win.connect("delete-event", terminate)
 
 		signal.signal(signal.SIGINT, signal.SIG_DFL)
 		signal.signal(signal.SIGTERM, terminate)
@@ -126,36 +129,38 @@ class WebScreensaver(object):
 
 	@classmethod
 	def determine_window_id(cls, win_id=None):
-		'''Try and get an XID to use as our parent window'''
+		"""Try and get an XID to use as our parent window"""
+
 		if not win_id:
-			win_id = os.getenv('XSCREENSAVER_WINDOW')
+			win_id = os.getenv("XSCREENSAVER_WINDOW")
 
 		if win_id:
 			win_id = long(int(win_id, 16))
 
 		return win_id
 
+
 class UserScripts(object):
-	'''
+	"""
 	Some quick and dirty scripts to help us remove cruft from web pages
-	'''
+	"""
 
 	@classmethod
 	def remove_ids(cls, _id):
-		script = '''
+		script = """
 			(function() {
 				var el = document.getElementById("%s");
 				if (el) {
 					el.parentNode.removeChild(el);
 				}
 			})();
-		'''
+		"""
 		return script % _id
 
 
 	@classmethod
 	def remove_tags(cls, tag):
-		script = '''
+		script = """
 			(function() {
 				var tags = document.getElementsByTagName("%s");
 				if (tags && tags.length > 0) {
@@ -165,14 +170,38 @@ class UserScripts(object):
 					}
 				}
 			})();
-		'''
+		"""
 		return script % tag
 
+	@classmethod
+	def remove_class(cls, class_name):
+		script = """
+			(function() {
+				var tags = document.getElementsByClassName("%s");
+				if (tags && tags.length > 0) {
+					for (var i = 0; i < tags.length; i++) {
+						var el = tags[i];
+						el.parentNode.removeChild(el);
+					}
+				}
+			})();
+		"""
+		return script % class_name
+
+	@classmethod
+	def run_command(cls, command):
+		script = """
+			(function () {
+				%s;
+			})()
+		"""
+		return script % command
+
 class WebHacks(object):
-	'''
+	"""
 	A collection of neat HTML5/WebGL demos
-	'''
-	
+	"""
+
 	class Hack(object):
 		__slots__ = "name url scripts".split(" ")
 
@@ -180,31 +209,80 @@ class WebHacks(object):
 			self.name, self.url, self.scripts = name, url, scripts
 
 	hacks = (
-		Hack('starfield',
-			url='http://www.chiptune.com/starfield/starfield.html',
-			scripts=[ UserScripts.remove_tags("iframe") ]
+		Hack("clock",
+			url="http://freelance-html-developer.com/clock/"),
+		Hack("noiseclock",
+			url="https://www.yuichiroharai.com/wgl/4_noise_clock/",
+			scripts=[UserScripts.remove_tags("h1")]),
+		Hack("water",
+			url="http://oos.moxiecode.com/js_webgl/water_noise/",
+			scripts=[UserScripts.remove_tags("img")]),
+		Hack("fractal",
+			url="http://david.alloza.eu/WebGL/morphing.html",
+			scripts=[UserScripts.remove_tags("audio"), ]),
+		Hack("anaglyph",
+			url="http://threejs.org/examples/webgl_effects_anaglyph.html"),
+		Hack("pulpo",
+			url="https://dl.dropboxusercontent.com/u/6983010/wserv/gexp_pulpo/index.html"),
+		Hack("aquarium",
+			url="http://webglsamples.org/aquarium/aquarium.html",
+			scripts=[
+				UserScripts.run_command("setSetting(document.getElementById('setSetting4'), 4)"),
+				UserScripts.run_command("setSetting(document.getElementById('setSetting9'), 9)"),
+				UserScripts.run_command("setSetting(document.getElementById('setSetting9'), 9)"),
+			]
 		),
-		Hack('reactive-ball',
-			url='http://lab.aerotwist.com/webgl/reactive-ball/',
-			scripts=[ UserScripts.remove_ids("msg") ]
-		),
-		Hack('hatching-glow',
-			url='http://www.ro.me/tech/demos/1/index.html',
-			scripts=[ UserScripts.remove_ids("info") ]
-		),
-		Hack('shadow-map',
-			url='http://alteredqualia.com/three/examples/webgl_shadowmap.html',
-			scripts=[ UserScripts.remove_ids("info") ]
-		),
-		Hack('birds',
-			url='http://mrdoob.github.com/three.js/examples/canvas_geometry_birds.html',
-			scripts=[ UserScripts.remove_ids("info"), UserScripts.remove_ids("container") ]
-		),
+		Hack("sea3d",
+			url="http://threejs.org/examples/webgl_loader_sea3d.html"),
+		Hack("marchingcubes",
+			url="http://threejs.org/examples/webgl_marchingcubes.html",
+			scripts=[UserScripts.remove_class("dg main a")]),
+		Hack("billboards",
+			url="http://threejs.org/examples/webgl_points_billboards_colors.html"),
+		Hack("billboards2d",
+			url="http://threejs.org/examples/webgl_points_billboards.html"),
+		Hack("sprites",
+			url="http://threejs.org/examples/webgl_points_sprites.html"),
+		Hack("dof",
+			url="http://threejs.org/examples/webgl_postprocessing_dof.html"),
+		Hack("shader",
+			url="http://threejs.org/examples/webgl_shader.html"),
+		Hack("ibillboards",
+			url="http://threejs.org/examples/webgl_buffergeometry_instancing_billboards.html"),
+		Hack("molecules", # TODO: select which element showing
+			url="http://threejs.org/examples/css3d_molecules.html",
+			scripts=[UserScripts.run_command("""
+				function pickRandomProperty(obj) {
+					var result;
+				var count = 0;
+				    for (var prop in obj)
+				        if (Math.random() < 1/++count)
+				           result = prop;
+				    return result;
+				};
+				setInterval(function(){
+					loadMolecule('models/molecules/' + MOLECULES[pickRandomProperty(MOLECULES)]);
+				}, 20000); // 20 sec
+			""")]),
+		# Hack("css3d_sprites", # TODO: Not working for some reasons
+		# 	url="http://threejs.org/examples/css3d_sprites.html",
+		# 	scripts=[UserScripts.run_command("document.body.style.backgroundColor = 'black'")]
+		# ),
+		Hack("earth",
+			url="http://threejs.org/examples/misc_controls_fly.html",
+			scripts=[UserScripts.remove_ids("info")]),
+		Hack("birds",
+			url="http://threejs.org/examples/canvas_geometry_birds.html",
+			scripts=[UserScripts.run_command("renderer.setClearColor( 0x000000 );")]),
+		Hack("sky_panorama",
+			url="http://threejs.org/examples/canvas_geometry_panorama.html"),
+		Hack("particles_random",
+			url="http://threejs.org/examples/canvas_particles_random.html"),
+		Hack("particles_sprites",
+			url="http://threejs.org/examples/canvas_particles_sprites.html"),
+		Hack("lines_sphere",
+			url="http://threejs.org/examples/webgl_lines_sphere.html"),
 
-		Hack('gimme-shiny',		url='http://gimmeshiny.com/?seconds=30'),
-		Hack('cell-shader',		url='http://www.ro.me/tech/demos/6/index.html'),
-		Hack('kinect',			url='http://mrdoob.com/lab/javascript/webgl/kinect/'),
-		Hack('conductor',		url='http://www.mta.me/'),
 	)
 
 	@classmethod
@@ -221,14 +299,15 @@ class WebHacks(object):
 		# I'm feeling lucky :-)
 		return random.choice(cls.hacks)
 
+
 if __name__ == "__main__":
 	import argparse
-	parser = argparse.ArgumentParser(description='WebScreensaver: Run a web page as your screensaver')
-	parser.add_argument('-window-id', help='XID of Window to draw on')
-	parser.add_argument('-url', help='URL of page to display')
-	parser.add_argument('-choose', help='Select a favourite')
-	parser.add_argument('-list', action='store_true', help='List favourites')
-	parser.add_argument('-cookie-file', metavar='PATH', help='Store cookies in PATH')
+	parser = argparse.ArgumentParser(description="WebScreensaver: Run a web page as your screensaver")
+	parser.add_argument("-window-id", help="XID of Window to draw on")
+	parser.add_argument("-url", help="URL of page to display")
+	parser.add_argument("-choose", help="Select a favourite")
+	parser.add_argument("-list", action="store_true", help='List favourites')
+	parser.add_argument("-cookie-file", metavar="PATH", help='Store cookies in PATH')
 	args = parser.parse_args()
 
 	if args.list:
