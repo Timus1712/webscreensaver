@@ -8,11 +8,13 @@ import random
 import signal
 
 import gi
+
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkX11', '3.0')
 gi.require_version('WebKit', '3.0')
 gi.require_version('Soup', '2.4')
-from gi.repository import Gtk, Gdk, GdkX11, GObject, Soup, WebKit
+
+from gi.repository import Gtk, Gdk, GdkX11, Soup, WebKit
 
 
 class WebScreensaver(object):
@@ -20,10 +22,11 @@ class WebScreensaver(object):
 	A simple wrapper for WebKit which works as an XScreensaver Hack
 	"""
 
-	def __init__(self, url="http://www.google.com", window_id=None, scripts=None):
+	def __init__(self, url="http://www.google.com", window_id=None, scripts=None, cookie_file=None):
 		self.window_id = window_id
 		self.scripts = scripts
 		self.url = url
+		self.cookie_file = cookie_file
 
 		self.w = 640
 		self.h = 480
@@ -70,8 +73,8 @@ class WebScreensaver(object):
 		# Take a stab at guessing whether we are running in the
 		# XScreensaver preview window...
 		if self.w < 320 and self.h < 240:
-			 self.browser.set_full_content_zoom(True)
-			 self.browser.set_zoom_level(0.4)
+			self.browser.set_full_content_zoom(True)
+			self.browser.set_zoom_level(0.4)
 
 
 		self.browser.set_size_request(self.w, self.h)
@@ -196,6 +199,7 @@ class UserScripts(object):
 			})()
 		"""
 		return script % command
+
 
 class WebHacks(object):
 	"""
